@@ -1,17 +1,17 @@
 import streamlit as st
 import pickle
-import numpy as np
 import pandas as pd
+import numpy as np
 
 st.set_page_config(page_title="Stres Tahmin Uygulaması", layout="centered")
 st.title("🧠 Stres Tahmin Uygulaması")
 st.markdown("Bu uygulama, belirli psikolojik ve davranışsal ölçütlere göre kişinin stresli olup olmadığını tahmin eder.")
 
-# Teknik olarak kullanılan sütun adları (model böyle eğitildi)
+# Teknik sıralı sütun isimleri
 columns = ['cesd', 'mbi_ex', 'mbi_ea', 'health', 'mbi_cy']
 
-# Türkçe açıklamalar
-feature_labels = {
+# Türkçe başlık ve açıklama eşlemesi
+labels = {
     'cesd': ('Depresyon Skoru (CES-D)', '70 üzeri → yüksek depresyon riski'),
     'mbi_ex': ('Duygusal Tükenmişlik (MBI-EX)', '80 üzeri → yüksek tükenmişlik'),
     'mbi_ea': ('Empati Azalması (MBI-EA)', '60 üzeri → empati kaybı olabilir'),
@@ -19,27 +19,30 @@ feature_labels = {
     'mbi_cy': ('Sorgulama/Duyarsızlaşma (MBI-CY)', '80 üzeri → duyarsızlaşma artabilir')
 }
 
+# Slider inputları topla
 st.sidebar.header("🔧 Girdi Değerleri")
-values = []
-for key in columns:
-    label, desc = feature_labels[key]
+input_dict = {}
+for col in columns:
+    label, explanation = labels[col]
     val = st.sidebar.slider(label, 0, 100, 50)
-    st.sidebar.caption(desc)
-    values.append(val)
+    st.sidebar.caption(explanation)
+    input_dict[col] = val
 
+# DataFrame oluştur (sıralı ve isimli)
+input_df = pd.DataFrame([input_dict])
 
-input_df = pd.DataFrame([values], columns=columns)
-
+# Model ve scaler yükle
 with open("model.pkl", "rb") as f:
     model = pickle.load(f)
 
 with open("scaler.pkl", "rb") as f:
     scaler = pickle.load(f)
 
+# Normalize edip tahmin et
 input_scaled = scaler.transform(input_df)
 prediction = model.predict(input_scaled)[0]
 
-
+# Tahmin sonucunu göster
 st.subheader("📊 Tahmin Sonucu:")
 if prediction == 1:
     st.error("🔴 Tahmin: **Stresli**")
