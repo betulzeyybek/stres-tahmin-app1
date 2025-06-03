@@ -24,17 +24,16 @@ for key, (label, desc) in feature_map.items():
     st.sidebar.caption(desc)
     user_input[key] = value
 
-# 🔧 En kritik düzeltme burada!
 input_df = pd.DataFrame([user_input], columns=feature_map.keys())
 
-# Model ve scaler'ı yükle
+
 with open("model.pkl", "rb") as f:
     model = pickle.load(f)
 
 with open("scaler.pkl", "rb") as f:
     scaler = pickle.load(f)
 
-# Ölçeklendir ve tahmin yap
+
 input_scaled = scaler.transform(input_df)
 prediction = model.predict(input_scaled)[0]
 
