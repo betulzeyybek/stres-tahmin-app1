@@ -7,8 +7,11 @@ st.set_page_config(page_title="Stres Tahmin Uygulaması", layout="centered")
 st.title("🧠 Stres Tahmin Uygulaması")
 st.markdown("Bu uygulama, belirli psikolojik ve davranışsal ölçütlere göre kişinin stresli olup olmadığını tahmin eder.")
 
-# Özellik açıklamaları ve Türkçe başlıklar
-feature_map = {
+# Teknik olarak kullanılan sütun adları (model böyle eğitildi)
+columns = ['cesd', 'mbi_ex', 'mbi_ea', 'health', 'mbi_cy']
+
+# Türkçe açıklamalar
+feature_labels = {
     'cesd': ('Depresyon Skoru (CES-D)', '70 üzeri → yüksek depresyon riski'),
     'mbi_ex': ('Duygusal Tükenmişlik (MBI-EX)', '80 üzeri → yüksek tükenmişlik'),
     'mbi_ea': ('Empati Azalması (MBI-EA)', '60 üzeri → empati kaybı olabilir'),
@@ -17,15 +20,15 @@ feature_map = {
 }
 
 st.sidebar.header("🔧 Girdi Değerleri")
-user_input = {}
-
-for key, (label, desc) in feature_map.items():
-    value = st.sidebar.slider(label, min_value=0, max_value=100, value=50)
+values = []
+for key in columns:
+    label, desc = feature_labels[key]
+    val = st.sidebar.slider(label, 0, 100, 50)
     st.sidebar.caption(desc)
-    user_input[key] = value
+    values.append(val)
 
-input_df = pd.DataFrame([user_input], columns=feature_map.keys())
 
+input_df = pd.DataFrame([values], columns=columns)
 
 with open("model.pkl", "rb") as f:
     model = pickle.load(f)
@@ -33,11 +36,10 @@ with open("model.pkl", "rb") as f:
 with open("scaler.pkl", "rb") as f:
     scaler = pickle.load(f)
 
-
 input_scaled = scaler.transform(input_df)
 prediction = model.predict(input_scaled)[0]
 
-# Tahmin sonucu göster
+
 st.subheader("📊 Tahmin Sonucu:")
 if prediction == 1:
     st.error("🔴 Tahmin: **Stresli**")
@@ -45,4 +47,4 @@ else:
     st.success("🟢 Tahmin: **Stresli Değil**")
 
 st.markdown("---")
-st.caption("Model: KNN (Korelasyon ile seçilen 5 özellik kullanılarak eğitildi)")
+st.caption("Model: KNN (Korelasyon ile seçilen 5 özellik ile eğitildi)")
